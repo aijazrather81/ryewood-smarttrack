@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ryewood SmartTrack — Student Portal</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      /* DARKER dashboard scheme */
+      --bg:#e7ebf5;          /* darker than before */
+      --panel:#f2f4fb;       /* slightly darker panel */
+      --text:#0f172a;
+      --muted:#5b6b86;
+      --stroke:#d9def0;
+
+      --side1:#4f5dff;
+      --side2:#6f3dff;
+
+      --card1a:#4b4aff; --card1b:#6572ff;
+      --card2a:#ff4f83; --card2b:#ff7aa2;
+      --card3a:#00a9c2; --card3b:#27cde0;
+      --card4a:#18d68a; --card4b:#34eaa2;
+
+      --warn:#f4b300;
+      --focus1:#4f5dff;
+      --focus2:#6f3dff;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app{display:flex; min-height:100vh;}
+
+    /* Sidebar */
+    .sidebar{
+      width:280px;
+      padding:22px 22px;
+      background: linear-gradient(180deg, var(--side1), var(--side2));
+      color:#fff;
+    }
+
+    .brandWrap{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
+    /* Brand font one size bigger */
+    .brandText{line-height:1.15;}
+    .brand{font-weight:700; font-size:20px; margin-bottom:2px;} /* was 18px */
+    .brand-sub{font-weight:700; font-size:18px; opacity:.95;}   /* was 16px */
+    .tagline{margin-top:8px; opacity:.9; font-size:13px;}
+
+    .nav{margin-top:18px; display:flex; flex-direction:column; gap:10px;}
+    .nav button{
+      all:unset;
+      cursor:pointer;
+      padding:12px 14px;
+      border-radius:12px;
+      background: rgba(255,255,255,.12);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:600;
+    }
+    .nav button.active{
+      background: rgba(255,255,255,.22);
+      outline:1px solid rgba(255,255,255,.18);
+    }
+    .nav .icon{width:22px; display:inline-flex; justify-content:center; opacity:.95;}
+
+    /* Main */
+    .main{flex:1; padding:26px 26px 40px;}
+
+    .topbar{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px;}
+    .title{font-size:36px; font-weight:800; letter-spacing:-.6px; margin:0;}
+
+    .top-actions{display:flex; align-items:center; gap:10px; position:relative;}
+
+    .btn{
+      border:0;
+      cursor:pointer;
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:700;
+      background:#4f5dff;
+      color:#fff;
+      box-shadow:0 10px 25px rgba(79,93,255,.25);
+    }
+    .btn:active{transform:translateY(1px)}
+
+    .moon{
+      width:44px;height:44px;
+      border-radius:999px;
+      border:0;
+      cursor:pointer;
+      background:#fff;
+      box-shadow:0 10px 25px rgba(15,23,42,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+    }
+
+    .menu{
+      position:absolute;
+      top:52px;
+      right:56px;
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      box-shadow:0 18px 40px rgba(15,23,42,.12);
+      overflow:hidden;
+      min-width:220px;
+      display:none;
+      z-index:10;
+    }
+    .menu.open{display:block}
+    .menu button{
+      all:unset;
+      cursor:pointer;
+      display:block;
+      width:100%;
+      padding:12px 14px;
+      font-weight:700;
+      color:var(--text);
+    }
+    .menu button:hover{background:#eef1ff}
+
+    .quote{
+      background:#e1e7ff;                 /* darker tint */
+      border-left:5px solid #4f5dff;
+      padding:14px 16px;
+      border-radius:12px;
+      font-style:italic;
+      color:#223055;
+      margin:12px 0 18px;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:16px;
+      margin-bottom:18px;
+    }
+    .stat{
+      border-radius:16px;
+      padding:18px;
+      color:#fff;
+      box-shadow:0 16px 35px rgba(15,23,42,.12);
+      min-height:108px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .stat .num{font-size:34px; font-weight:900; line-height:1;}
+    .stat .lbl{opacity:.95; font-weight:700; margin-top:6px;}
+    .g1{background:linear-gradient(135deg,var(--card1a),var(--card1b))}
+    .g2{background:linear-gradient(135deg,var(--card2a),var(--card2b))}
+    .g3{background:linear-gradient(135deg,var(--card3a),var(--card3b))}
+    .g4{background:linear-gradient(135deg,var(--card4a),var(--card4b))}
+
+    .streak{
+      background:var(--warn);
+      border-radius:16px;
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      box-shadow:0 12px 28px rgba(244,179,0,.22);
+      margin-bottom:18px;
+    }
+    .streak .fire{font-size:22px}
+    .streak small{display:block;font-weight:700;opacity:.85}
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 18px 40px rgba(15,23,42,.07);
+      margin-bottom:18px;
+    }
+    .panel h3{margin:0 0 12px; font-size:20px; font-weight:900;}
+
+    .weekly{
+      display:grid;
+      grid-template-columns:repeat(7, minmax(0, 1fr));
+      gap:12px;
+    }
+    .daybox{
+      background:#edf0ff;               /* darker than before */
+      border:1px solid #dbe2ff;
+      border-radius:14px;
+      padding:12px;
+      min-height:120px;
+    }
+    .daybox .d{
+      font-weight:900;
+      color:#111827;
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:6px;
+    }
+
+    .taskLine{
+      margin-top:10px;
+      font-size:13px;
+      color:#4e5f7b;
+      font-weight:700;
+      line-height:1.25;
+    }
+    .noTask{
+      margin-top:10px;
+      color:#4e5f7b;
+      font-weight:700;
+      font-size:13px;
+      opacity:.9;
+    }
+
+    .focusWrap h3{margin-bottom:10px}
+    .focus{
+      background:linear-gradient(135deg,var(--focus1),var(--focus2));
+      border-radius:18px;
+      padding:26px 20px;
+      color:#fff;
+      text-align:center;
+    }
+    .focus .ftitle{font-weight:900; letter-spacing:.3px; font-size:18px; opacity:.95; margin-bottom:10px;}
+    .focus .time{font-size:74px; font-weight:1000; letter-spacing:1px; margin:10px 0 14px;}
+    .focus .controls{display:flex; justify-content:center; gap:12px; flex-wrap:wrap;}
+    .focus .controls button{
+      border:0;
+      cursor:pointer;
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:900;
+      background:#ffffff;
+      color:#1f2a44;
+      min-width:110px;
+    }
+
+    .tabHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .tabHeader .sub{color:var(--muted); font-weight:700; font-size:13px;}
+
+    .form{
+      display:grid;
+      grid-template-columns:repeat(6, minmax(0, 1fr));
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .form input, .form select{
+      padding:10px;
+      border:1px solid var(--stroke);
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      font-weight:700;
+      color:#111827;
+    }
+    .form .span2{grid-column:span 2;}
+    .form .span3{grid-column:span 3;}
+    .form .span6{grid-column:span 6;}
+
+    .rowActions{display:flex; gap:8px;}
+    .pill{
+      border:0;
+      cursor:pointer;
+      padding:8px 10px;
+      border-radius:12px;
+      font-weight:900;
+      color:#fff;
+    }
+    .pill.edit{background:#f59e0b}
+    .pill.del{background:#ef4444}
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      table-layout:auto; /* allow natural sizing to remove “gap” feel */
+    }
+    thead th{
+      background:linear-gradient(135deg,#e3e9ff,#edf0ff);
+      color:#1f2a44;
+      font-weight:900;
+      padding:12px 10px;
+      border-bottom:1px solid var(--stroke);
+      text-align:left;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    tbody td{
+      padding:10px;
+      border-bottom:1px solid #e2e8ff;
+      font-weight:700;
+      color:#0f172a;
+      font-size:13px;
+      vertical-align:top;
+      overflow-wrap:anywhere;
+    }
+    tbody tr:last-child td{border-bottom:0}
+
+    .twoCol{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .kpiLine{
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap;
+      font-weight:900;
+      margin-top:10px;
+      color:#0f172a;
+    }
+    .kpiLine span{color:var(--muted);font-weight:800}
+
+    .tabs{display:none}
+    .tabs.active{display:block}
+
+    /* Search styling - more visible on darker scheme */
+    input.search{
+      padding:10px 12px;
+      border:1px solid #c7d0f3;
+      border-radius:14px;
+      outline:none;
+      background:#ffffff;
+      font-weight:700;
+      color:#0f172a;
+      box-shadow:0 6px 16px rgba(15,23,42,.06);
+    }
+    input.search::placeholder{color:#6b7aa0}
+
+    body.dark{
+      --bg:#0b1020;
+      --panel:#0f172a;
+      --text:#e5e7eb;
+      --muted:#93a4c4;
+      --stroke:#1e2a48;
+    }
+    body.dark .quote{background:#101a33;color:#c7d2fe}
+    body.dark .panel, body.dark table{background:#0f172a}
+    body.dark .daybox{background:#0f1b36;border-color:#1d2a4c}
+    body.dark thead th{background:linear-gradient(135deg,#0f1b36,#13224a); color:#e5e7eb}
+    body.dark tbody td{color:#e5e7eb}
+    body.dark .moon{background:#0f172a;color:#e5e7eb;border:1px solid var(--stroke)}
+    body.dark .menu{background:#0f172a}
+    body.dark .menu button{color:#e5e7eb}
+    body.dark .menu button:hover{background:#101a33}
+
+    @media(max-width:1100px){
+      .cards{grid-template-columns:repeat(2, 1fr)}
+      .form{grid-template-columns:repeat(2, 1fr)}
+      .twoCol{grid-template-columns:1fr}
+      .weekly{grid-template-columns:repeat(2, 1fr)}
+      .sidebar{width:240px}
+    }
+    @media(max-width:700px){
+      .app{flex-direction:column}
+      .sidebar{width:100%}
+      .title{font-size:28px}
+      .weekly{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brandWrap">
+        <div class="brandText">
+          <div class="brand">Ryewood SmartTrack</div>
+          <div class="brand-sub">— Student Portal</div>
+        </div>
+      </div>
+
+      <div class="tagline">Learn. Note. Review.</div>
+
+      <nav class="nav">
+        <button id="navDash" class="active" onclick="go('dashboard')"><span class="icon">📊</span>Dashboard</button>
+        <button id="navPlan" onclick="go('planner')"><span class="icon">🗓️</span>Study Planner</button>
+        <button id="navHW" onclick="go('homework')"><span class="icon">📚</span>Homework</button>
+        <button id="navPerf" onclick="go('performance')"><span class="icon">📈</span>Performance</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1 class="title">Dashboard</h1>
+
+        <div class="top-actions">
+          <button class="btn" id="addBtn">+ Add Task</button>
+          <button class="moon" id="darkBtn" title="Toggle theme">🌙</button>
+
+          <div class="menu" id="addMenu">
+            <button onclick="go('planner'); closeMenu(); document.getElementById('pStudent').focus();">Add Study Plan</button>
+            <button onclick="go('homework'); closeMenu(); document.getElementById('hSubject').focus();">Add Homework</button>
+            <button onclick="go('performance'); closeMenu(); document.getElementById('mSubject').focus();">Add Performance</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="quote" id="quoteBox">Learning never exhausts the mind. — Leonardo da Vinci</div>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard" class="tabs active">
+        <div class="cards">
+          <div class="stat g1">
+            <div class="num" id="kpiPlans">0</div>
+            <div class="lbl">Total Plans</div>
+          </div>
+
+          <div class="stat g2">
+            <div class="num" id="kpiHomework">0</div>
+            <div class="lbl">Homework</div>
+          </div>
+
+          <div class="stat g3">
+            <div class="num" id="kpiHours">0.0</div>
+            <div class="lbl">Study Hours</div>
+          </div>
+
+          <div class="stat g4">
+            <div class="num" id="kpiTotalAvg">0%</div>
+            <div class="lbl">Total Average</div>
+          </div>
+        </div>
+
+        <div class="streak">
+          <div class="fire">🔥</div>
+          <div><div><span id="streakDays">7</span> <small>Day Streak</small></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="tabHeader">
+            <div>
+              <h3 style="margin:0;">Weekly Calendar</h3>
+              <div class="sub">Study planner overview (from Study Planner tab)</div>
+            </div>
+            <input id="searchBox" class="search" style="width:260px;" placeholder="Search (English, Math...)" />
+          </div>
+
+          <div class="weekly" id="weeklyGrid"></div>
+        </div>
+
+        <div class="panel">
+          <div class="twoCol">
+            <div>
+              <h3>Homework Overview</h3>
+              <div class="sub" style="margin-bottom:10px;">Subject, Task, Status and Assignment Submission Date</div>
+
+              <!-- UPDATED: remove gap feel + keep date visible -->
+              <table>
+                <colgroup>
+                  <col style="width:18%">
+                  <col style="width:22%">
+                  <col style="width:18%">
+                  <col style="width:20%">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Task</th>
+                    <th>Status</th>
+                    <th>Assignment Submission Date</th>
+                  </tr>
+                </thead>
+                <tbody id="dashHwBody"></tbody>
+              </table>
+
+              <div class="kpiLine">
+                <div><span>Total Homework:</span> <b id="dashHwCount">0</b></div>
+              </div>
+              <div style="margin-top:10px;">
+                <button class="btn" style="background:#334155;box-shadow:none" onclick="go('homework')">Open Homework Page</button>
+              </div>
+            </div>
+
+            <div>
+              <h3>Performance Overview</h3>
+              <div class="sub" style="margin-bottom:10px;">Subject, Marks and Grade</div>
+              <table>
+                <colgroup>
+                  <col style="width:42%">
+                  <col style="width:30%">
+                  <col style="width:28%">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody id="dashPerfBody"></tbody>
+              </table>
+              <div class="kpiLine">
+                <div><span>Total Average:</span> <b id="dashAvg">0%</b></div>
+                <div><span>Grade:</span> <b id="dashGrade">-</b></div>
+              </div>
+              <div style="margin-top:10px;">
+                <button class="btn" style="background:#334155;box-shadow:none" onclick="go('performance')">Open Performance Page</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel focusWrap">
+          <h3>Pomodoro Timer</h3>
+          <div class="focus">
+            <div class="ftitle">Focus Session</div>
+            <div class="time" id="timerText">25:00</div>
+            <div class="controls">
+              <button onclick="timerStart()">▶ Start</button>
+              <button onclick="timerPause()">⏸ Pause</button>
+              <button onclick="timerReset()">🔁 Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STUDY PLANNER -->
+      <section id="planner" class="tabs">
+        <div class="panel">
+          <div class="tabHeader">
+            <div>
+              <h3 style="margin:0;">Study Planner</h3>
+              <div class="sub">Add a timetable task. It will appear on Dashboard Weekly Calendar.</div>
+            </div>
+          </div>
+
+          <div class="form">
+            <input id="pStudent" class="span2" placeholder="Student Name" />
+            <input id="pSubject" placeholder="Subject Name" />
+            <select id="pDay">
+              <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+              <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+            </select>
+            <input id="pTeacher" placeholder="Teacher Name" />
+            <select id="pTime"></select>
+            <input id="pTask" class="span2" placeholder="Task" />
+            <input id="pTrack" class="span2" placeholder="Track (Goal / Chapter)" />
+          </div>
+
+          <button class="btn" onclick="plannerAdd()">Add Plan</button>
+
+          <div style="margin-top:14px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th><th>Subject</th><th>Day</th><th>Time</th><th>Teacher</th><th>Task</th><th>Track</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="plannerBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOMEWORK -->
+      <section id="homework" class="tabs">
+        <div class="panel">
+          <div class="tabHeader">
+            <div>
+              <h3 style="margin:0;">Homework</h3>
+              <div class="sub">Add Subject, Task, Status, Start Date and Completion Date.</div>
+            </div>
+          </div>
+
+          <div class="form">
+            <input id="hSubject" class="span2" placeholder="Subject" />
+            <input id="hTask" class="span2" placeholder="Task" />
+            <select id="hStatus" class="span2">
+              <option>In Progress</option>
+              <option>Completed</option>
+              <option>Pending</option>
+              <option>Delayed</option>
+            </select>
+            <input id="hStart" type="date" />
+            <input id="hEnd" type="date" />
+          </div>
+
+          <button class="btn" onclick="hwAdd()">Add Homework</button>
+
+          <div style="margin-top:14px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject</th><th>Task</th><th>Status</th><th>Start Date</th><th>Completion Date</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="hwBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PERFORMANCE -->
+      <section id="performance" class="tabs">
+        <div class="panel">
+          <div class="tabHeader">
+            <div>
+              <h3 style="margin:0;">Performance</h3>
+              <div class="sub">Enter marks with exam date and assessment phase.</div>
+            </div>
+          </div>
+
+          <div class="form">
+            <input id="mSubject" class="span2" placeholder="Subject" />
+            <input id="mMarks" type="number" placeholder="Marks" />
+            <input id="mOut" type="number" placeholder="Out Of" />
+            <input id="mDate" type="date" class="span2" />
+            <select id="mPhase" class="span2">
+              <option>Semester 1</option>
+              <option>Semester 2</option>
+              <option>Semester 3</option>
+              <option>Semester 4</option>
+              <option>Classroom Assessment</option>
+            </select>
+          </div>
+
+          <button class="btn" onclick="perfAdd()">Add Marks</button>
+
+          <div style="margin-top:14px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject</th><th>Marks</th><th>Out Of</th><th>Exam Date</th><th>Assessment Phase</th><th>%</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="perfBody"></tbody>
+            </table>
+          </div>
+
+          <div class="kpiLine" style="margin-top:12px;">
+            <div><span>Total Average:</span> <b id="perfAvg">0%</b></div>
+            <div><span>Grade:</span> <b id="perfGrade">-</b></div>
+          </div>
+
+          <div class="panel" style="margin-top:16px;">
+            <h3 style="margin-top:0;">Performance Chart</h3>
+            <canvas id="perfChart" height="120"></canvas>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const store = {
+      get(k, fallback){
+        try{ return JSON.parse(localStorage.getItem(k)) ?? fallback; }catch(e){ return fallback; }
+      },
+      set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+    };
+
+    let plans = store.get('rye_plans', []);
+    let homeworks = store.get('rye_homeworks', []);
+    let performances = store.get('rye_perfs', []);
+
+    function go(id){
+      document.querySelectorAll('.tabs').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      if(id==='dashboard') navDash.classList.add('active');
+      if(id==='planner') navPlan.classList.add('active');
+      if(id==='homework') navHW.classList.add('active');
+      if(id==='performance') navPerf.classList.add('active');
+
+      document.querySelector('.title').textContent = (id==='dashboard' ? 'Dashboard' :
+        id==='planner' ? 'Study Planner' :
+        id==='homework' ? 'Homework' : 'Performance'
+      );
+
+      closeMenu();
+      refreshAll();
+    }
+
+    const addBtn = document.getElementById('addBtn');
+    const addMenu = document.getElementById('addMenu');
+    addBtn.addEventListener('click', () => addMenu.classList.toggle('open'));
+    function closeMenu(){ addMenu.classList.remove('open'); }
+    document.addEventListener('click', (e)=>{
+      if(!addMenu.contains(e.target) && e.target !== addBtn) closeMenu();
+    });
+
+    const darkBtn = document.getElementById('darkBtn');
+    const savedTheme = store.get('rye_theme', 'light');
+    if(savedTheme==='dark') document.body.classList.add('dark');
+    darkBtn.addEventListener('click', ()=>{
+      document.body.classList.toggle('dark');
+      store.set('rye_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    const quotes = [
+      "Learning never exhausts the mind. — Leonardo da Vinci",
+      "Small steps every day lead to big results.",
+      "Discipline beats motivation when motivation fades.",
+      "Focus on progress, not perfection.",
+      "Your future is created by what you do today."
+    ];
+    document.getElementById('quoteBox').textContent = quotes[Math.floor(Math.random()*quotes.length)];
+
+    const searchBox = document.getElementById('searchBox');
+    searchBox.addEventListener('input', refreshAll);
+    function matchesSearch(text){
+      const q = searchBox.value.trim().toLowerCase();
+      if(!q) return true;
+      return (text || '').toLowerCase().includes(q);
+    }
+
+    const timeSel = document.getElementById('pTime');
+    (function buildTimeSlots(){
+      const slots = [];
+      for(let h=8; h<21; h++){
+        const start = h, end = h+1;
+        const to12 = (x)=>{
+          const ampm = x >= 12 ? 'PM' : 'AM';
+          const hour = (x%12)===0 ? 12 : (x%12);
+          return `${hour}${ampm}`;
+        };
+        slots.push(`${to12(start)}-${to12(end)}`);
+      }
+      timeSel.innerHTML = slots.map(s=>`<option>${s}</option>`).join('');
+    })();
+
+    let editPlanId=null;
+    function plannerAdd(){
+      const obj = {
+        id: editPlanId ?? crypto.randomUUID(),
+        student: pStudent.value.trim(),
+        subject: pSubject.value.trim(),
+        day: pDay.value,
+        time: pTime.value,
+        teacher: pTeacher.value.trim(),
+        task: pTask.value.trim(),
+        track: pTrack.value.trim(),
+        done:false
+      };
+      if(!obj.student || !obj.subject || !obj.task){ alert("Please fill Student Name, Subject and Task."); return; }
+      if(editPlanId){ plans = plans.map(x=>x.id===editPlanId?obj:x); editPlanId=null; } else { plans.push(obj); }
+      store.set('rye_plans', plans);
+      pStudent.value=''; pSubject.value=''; pTeacher.value=''; pTask.value=''; pTrack.value='';
+      pDay.value='Monday'; pTime.selectedIndex=0;
+      refreshAll();
+    }
+    function plannerEdit(id){
+      const x=plans.find(p=>p.id===id); if(!x) return;
+      editPlanId=id;
+      pStudent.value=x.student; pSubject.value=x.subject; pDay.value=x.day; pTime.value=x.time;
+      pTeacher.value=x.teacher; pTask.value=x.task; pTrack.value=x.track;
+      go('planner'); window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function plannerDelete(id){
+      if(!confirm("Delete this study plan?")) return;
+      plans=plans.filter(p=>p.id!==id); store.set('rye_plans', plans); refreshAll();
+    }
+    function plannerToggleDone(id){
+      plans=plans.map(p=>p.id===id?({...p,done:!p.done}):p); store.set('rye_plans', plans); refreshAll();
+    }
+
+    let editHWId=null;
+    function hwAdd(){
+      const obj={
+        id: editHWId ?? crypto.randomUUID(),
+        subject:hSubject.value.trim(),
+        task:hTask.value.trim(),
+        status:hStatus.value,
+        start:hStart.value,
+        end:hEnd.value
+      };
+      if(!obj.subject || !obj.task || !obj.status || !obj.start || !obj.end){
+        alert("Please fill Subject, Task, Status, Start Date and Completion Date."); return;
+      }
+      if(editHWId){ homeworks=homeworks.map(x=>x.id===editHWId?obj:x); editHWId=null; } else { homeworks.push(obj); }
+      store.set('rye_homeworks', homeworks);
+      hSubject.value=''; hTask.value=''; hStatus.value='In Progress'; hStart.value=''; hEnd.value='';
+      refreshAll();
+    }
+    function hwEdit(id){
+      const x=homeworks.find(h=>h.id===id); if(!x) return;
+      editHWId=id;
+      hSubject.value=x.subject; hTask.value=x.task; hStatus.value=x.status||'In Progress';
+      hStart.value=x.start; hEnd.value=x.end;
+      go('homework'); window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function hwDelete(id){
+      if(!confirm("Delete this homework?")) return;
+      homeworks=homeworks.filter(h=>h.id!==id); store.set('rye_homeworks', homeworks); refreshAll();
+    }
+
+    let editPerfId=null;
+    let perfChart=null;
+
+    function perfPct(p){ const pct=(p.marks/p.outOf)*100; return Number.isFinite(pct)?pct:0; }
+    function gradeFrom(avgPct){
+      if(avgPct>=90) return "A";
+      if(avgPct>=75) return "B";
+      if(avgPct>=60) return "C";
+      if(avgPct>=50) return "D";
+      return "Needs Improvement";
+    }
+
+    function perfAdd(){
+      const marks=Number(mMarks.value), outOf=Number(mOut.value), subject=mSubject.value.trim();
+      const examDate=mDate.value, phase=mPhase.value;
+      if(!subject || !Number.isFinite(marks) || !Number.isFinite(outOf) || outOf<=0 || !examDate || !phase){
+        alert("Please enter valid Subject, Marks, Out Of, Exam Date and Assessment Phase."); return;
+      }
+      const obj={ id: editPerfId ?? crypto.randomUUID(), subject, marks, outOf, date:examDate, phase };
+      if(editPerfId){ performances=performances.map(p=>p.id===editPerfId?obj:p); editPerfId=null; } else { performances.push(obj); }
+      store.set('rye_perfs', performances);
+      mSubject.value=''; mMarks.value=''; mOut.value=''; mDate.value=''; mPhase.value='Semester 1';
+      refreshAll();
+    }
+    function perfEdit(id){
+      const x=performances.find(p=>p.id===id); if(!x) return;
+      editPerfId=id;
+      mSubject.value=x.subject; mMarks.value=x.marks; mOut.value=x.outOf; mDate.value=x.date||''; mPhase.value=x.phase||'Semester 1';
+      go('performance'); window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function perfDelete(id){
+      if(!confirm("Delete this performance entry?")) return;
+      performances=performances.filter(p=>p.id!==id); store.set('rye_perfs', performances); refreshAll();
+    }
+
+    const weekDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    function renderWeekly(){
+      const grid=document.getElementById('weeklyGrid'); grid.innerHTML='';
+      const byDay={}; weekDays.forEach(d=>byDay[d]=[]);
+      plans.forEach(p=>{ if(byDay[p.day]) byDay[p.day].push(p); });
+
+      weekDays.forEach(d=>{
+        const box=document.createElement('div'); box.className='daybox';
+        const top=document.createElement('div'); top.className='d';
+        top.innerHTML=`<span>${d.slice(0,3)}</span><span style="opacity:.6;font-weight:900"></span>`;
+        box.appendChild(top);
+
+        const items=byDay[d].filter(p=>matchesSearch(p.subject)||matchesSearch(p.task));
+        if(items.length===0){
+          const empty=document.createElement('div'); empty.className='noTask'; empty.textContent='No tasks';
+          box.appendChild(empty);
+        }else{
+          items.slice(0,4).forEach(p=>{
+            const line=document.createElement('div'); line.className='taskLine';
+            line.textContent = `${p.subject} • ${p.time}  |  ${p.task}`;
+            box.appendChild(line);
+          });
+        }
+        grid.appendChild(box);
+      });
+    }
+
+    function calcKPIs(){
+      document.getElementById('kpiPlans').textContent = plans.length;
+
+      const activeHomeworkCount = homeworks.filter(h => (h.status || 'In Progress') !== 'Completed').length;
+      document.getElementById('kpiHomework').textContent = activeHomeworkCount;
+
+      document.getElementById('kpiHours').textContent = (plans.length * 1.0).toFixed(1);
+
+      const avg = performances.length ? performances.reduce((a,p)=>a+perfPct(p),0)/performances.length : 0;
+      document.getElementById('kpiTotalAvg').textContent = avg.toFixed(1) + '%';
+    }
+
+    function renderDashHW(){
+      const body=document.getElementById('dashHwBody'); body.innerHTML='';
+      const filtered=homeworks.filter(h=>matchesSearch(h.subject)||matchesSearch(h.task)||matchesSearch(h.status));
+      document.getElementById('dashHwCount').textContent = filtered.length;
+
+      if(filtered.length===0){
+        body.innerHTML=`<tr><td colspan="4" style="color:#5b6b86;font-weight:800">No homework added</td></tr>`;
+        return;
+      }
+
+      filtered.slice(0,6).forEach(h=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(h.subject)}</td>
+          <td>${escapeHtml(h.task)}</td>
+          <td>${escapeHtml(h.status || 'In Progress')}</td>
+          <td>${escapeHtml(h.end)}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderDashPerf(){
+      const body=document.getElementById('dashPerfBody'); body.innerHTML='';
+      const filtered=performances.filter(p=>matchesSearch(p.subject)||matchesSearch(p.phase));
+
+      if(filtered.length===0){
+        body.innerHTML=`<tr><td colspan="3" style="color:#5b6b86;font-weight:800">No marks added</td></tr>`;
+      }else{
+        filtered.slice(0,6).forEach(p=>{
+          const pct=perfPct(p);
+          const tr=document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(p.subject)}</td>
+            <td>${p.marks}/${p.outOf}</td>
+            <td>${gradeFrom(pct)}</td>
+          `;
+          body.appendChild(tr);
+        });
+      }
+
+      const avg = performances.length ? performances.reduce((a,p)=>a+perfPct(p),0)/performances.length : 0;
+      document.getElementById('dashAvg').textContent = avg.toFixed(1) + '%';
+      document.getElementById('dashGrade').textContent = performances.length ? gradeFrom(avg) : '-';
+
+      document.getElementById('perfAvg').textContent = avg.toFixed(1) + '%';
+      document.getElementById('perfGrade').textContent = performances.length ? gradeFrom(avg) : '-';
+    }
+
+    function renderPlannerTable(){
+      const body=document.getElementById('plannerBody'); body.innerHTML='';
+      if(plans.length===0){
+        body.innerHTML=`<tr><td colspan="8" style="color:#5b6b86;font-weight:800">No study plans</td></tr>`;
+        return;
+      }
+      plans.forEach(p=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${escapeHtml(p.student)}</td>
+          <td>${escapeHtml(p.subject)}</td>
+          <td>${escapeHtml(p.day)}</td>
+          <td>${escapeHtml(p.time)}</td>
+          <td>${escapeHtml(p.teacher)}</td>
+          <td>${escapeHtml(p.task)}</td>
+          <td>${escapeHtml(p.track)}</td>
+          <td>
+            <div class="rowActions">
+              <button class="pill edit" onclick="plannerEdit('${p.id}')">Edit</button>
+              <button class="pill del" onclick="plannerDelete('${p.id}')">Delete</button>
+            </div>
+            <div style="margin-top:8px;">
+              <label style="font-weight:900;color:#5b6b86;display:flex;gap:8px;align-items:center;">
+                <input type="checkbox" ${p.done?'checked':''} onchange="plannerToggleDone('${p.id}')"/>
+                Completed
+              </label>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderHWTable(){
+      const body=document.getElementById('hwBody'); body.innerHTML='';
+      if(homeworks.length===0){
+        body.innerHTML=`<tr><td colspan="6" style="color:#5b6b86;font-weight:800">No homework</td></tr>`;
+        return;
+      }
+      homeworks.forEach(h=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${escapeHtml(h.subject)}</td>
+          <td>${escapeHtml(h.task)}</td>
+          <td>${escapeHtml(h.status || 'In Progress')}</td>
+          <td>${escapeHtml(h.start)}</td>
+          <td>${escapeHtml(h.end)}</td>
+          <td>
+            <div class="rowActions">
+              <button class="pill edit" onclick="hwEdit('${h.id}')">Edit</button>
+              <button class="pill del" onclick="hwDelete('${h.id}')">Delete</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderPerfTable(){
+      const body=document.getElementById('perfBody'); body.innerHTML='';
+      if(performances.length===0){
+        body.innerHTML=`<tr><td colspan="7" style="color:#5b6b86;font-weight:800">No performance entries</td></tr>`;
+        renderChart([]);
+        return;
+      }
+      performances.forEach(p=>{
+        const pct=perfPct(p);
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${escapeHtml(p.subject)}</td>
+          <td>${p.marks}</td>
+          <td>${p.outOf}</td>
+          <td>${escapeHtml(p.date || '')}</td>
+          <td>${escapeHtml(p.phase || '')}</td>
+          <td>${pct.toFixed(1)}%</td>
+          <td>
+            <div class="rowActions">
+              <button class="pill edit" onclick="perfEdit('${p.id}')">Edit</button>
+              <button class="pill del" onclick="perfDelete('${p.id}')">Delete</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+      renderChart(performances);
+    }
+
+    function renderChart(data){
+      const canvas=document.getElementById('perfChart'); if(!canvas) return;
+      const ctx=canvas.getContext('2d');
+      const labels=data.map(d=>d.subject);
+      const values=data.map(d=>Number(perfPct(d).toFixed(1)));
+
+      if(perfChart) perfChart.destroy();
+      perfChart=new Chart(ctx,{
+        type:'bar',
+        data:{labels, datasets:[{label:'Percentage', data:values, borderWidth:0}]},
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, max:100}}}
+      });
+    }
+
+    let focusSeconds=25*60, focusInterval=null;
+    function formatTime(s){ const m=Math.floor(s/60), sec=s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
+    function updateTimerUI(){ document.getElementById('timerText').textContent=formatTime(focusSeconds); }
+    function timerStart(){
+      if(focusInterval) return;
+      focusInterval=setInterval(()=>{ if(focusSeconds>0){focusSeconds--; updateTimerUI();} else timerPause(); },1000);
+    }
+    function timerPause(){ clearInterval(focusInterval); focusInterval=null; }
+    function timerReset(){ timerPause(); focusSeconds=25*60; updateTimerUI(); }
+    updateTimerUI();
+
+    function escapeHtml(s){
+      return (s ?? '').toString()
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    function refreshAll(){
+      store.set('rye_plans', plans);
+      store.set('rye_homeworks', homeworks);
+      store.set('rye_perfs', performances);
+      calcKPIs();
+      renderWeekly();
+      renderDashHW();
+      renderDashPerf();
+      renderPlannerTable();
+      renderHWTable();
+      renderPerfTable();
+    }
+    refreshAll();
+  </script>
+</body>
+</html>
